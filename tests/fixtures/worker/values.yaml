@@ -1,0 +1,16 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+workloads:
+  mailer:
+    kind: worker
+    image: be
+    replicas: 1
+    command: ["/app/worker", "mailer"]
+    health:
+      port: 8080
+      ready: /readyz
+      live: /healthz
+    envFrom:
+      - secretRef: demo-secrets

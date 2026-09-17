@@ -1,0 +1,11 @@
+{{- $first := true }}
+{{- range $name, $w := .Values.workloads }}
+{{- if not $first }}{{ "\n" }}{{- end }}
+{{- $first = false }}
+{{- include (printf "deploy-template.%s" $w.kind) (dict "ctx" $ "name" $name) }}
+{{- end }}
+{{- include "deploy-template.migration" (dict "ctx" $ "name" "migration") }}
+{{- include "deploy-template.route" (dict "ctx" $ "name" "route") }}
+{{- range $name, $w := .Values.workloads }}
+{{- include "deploy-template.networkpolicy" (dict "ctx" $ "name" $name) }}
+{{- end }}

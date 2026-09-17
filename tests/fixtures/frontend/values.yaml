@@ -1,0 +1,13 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+workloads:
+  web:
+    kind: frontend
+    image: fe
+    replicas: 1
+    health:
+      port: 80
+      ready: /
+      live: /healthz

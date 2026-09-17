@@ -1,0 +1,30 @@
+# Harness mô phỏng một chart consumer: Helm chỉ merge default của
+# library chart vào scope `.Values["deploy-template"]`, không lên top-level,
+# mà helper đọc `.Values` top-level qua `.ctx`. Nên harness khai lại
+# default trung tính ở top-level — đúng như mọi chart consumer vẫn làm.
+image:
+  registry: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+podSecurity:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+workloads: {}
+dependencies: []
+
+# Gateway của cụm cho _route.tpl. Dự án không đặt tên này, cụm đè qua values: trong stacks/.
+gateway: {}
+
+# Migration chạy trước bằng helm hook. Tắt mặc định.
+migration:
+  enabled: false
+
+# Route công cộng cho _route.tpl. Trống mặc định.
+routes: []

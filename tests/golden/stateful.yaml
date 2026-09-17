@@ -1,0 +1,80 @@
+---
+# Source: harness/templates/all.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-db
+  labels:
+    app.kubernetes.io/name: db
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: stateful
+    app.kubernetes.io/managed-by: Helm
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: db
+    app.kubernetes.io/instance: test
+  ports:
+    - name: tcp
+      port: 5432
+      targetPort: tcp
+
+---
+# Source: harness/templates/all.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: test-db
+  labels:
+    app.kubernetes.io/name: db
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: stateful
+    app.kubernetes.io/managed-by: Helm
+spec:
+  serviceName: test-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: db
+      app.kubernetes.io/instance: test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db
+        app.kubernetes.io/instance: test
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: db
+          image: ghcr.io/demo/postgres:1.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: tcp
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "appdb"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 20Gi

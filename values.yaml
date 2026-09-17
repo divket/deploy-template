@@ -1,0 +1,28 @@
+# Default trung tính: không host thật, không secret, không tên môi trường.
+image:
+  registry: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Mặc định pod chạy non-root. Dự án đè khi image cần uid khác.
+podSecurity:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+workloads: {}
+dependencies: []
+
+# Gateway của cụm cho _route.tpl. Dự án không đặt tên này, cụm đè qua values: trong stacks/.
+gateway: {}
+
+# Migration chạy trước bằng helm hook. Tắt mặc định.
+migration:
+  enabled: false
+
+# Route công cộng cho _route.tpl. Trống mặc định.
+routes: []

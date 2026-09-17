@@ -1,0 +1,8 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+workloads: {}
+
+migration:
+  enabled: false

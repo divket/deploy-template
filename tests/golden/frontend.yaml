@@ -1,0 +1,64 @@
+---
+# Source: harness/templates/all.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-web
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/instance: test
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
+---
+# Source: harness/templates/all.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-web
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web
+      app.kubernetes.io/instance: test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: web
+        app.kubernetes.io/instance: test
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: ghcr.io/demo/fe:1.0.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 80

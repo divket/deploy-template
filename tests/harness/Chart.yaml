@@ -1,0 +1,9 @@
+apiVersion: v2
+name: harness
+description: Renders deploy-template templates so golden tests can diff the output
+type: application
+version: 0.0.0
+dependencies:
+  - name: deploy-template
+    version: 0.1.0
+    repository: file://../..

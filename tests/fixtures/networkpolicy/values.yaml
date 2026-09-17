@@ -1,0 +1,17 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+gateway:
+  name: cluster-gateway
+  namespace: platform
+
+workloads:
+  api:
+    kind: backend
+    image: be
+    port: 8080
+
+dependencies:
+  - {name: postgres, ns: shared, service: postgres, port: 5432, env: DATABASE_HOST}
+  - {name: redis, ns: shared, service: redis, port: 6379, env: REDIS_HOST}

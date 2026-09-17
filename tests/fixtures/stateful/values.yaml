@@ -1,0 +1,16 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+workloads:
+  db:
+    kind: stateful
+    image: postgres
+    replicas: 1
+    port: 5432
+    env:
+      POSTGRES_DB: appdb
+    volume:
+      size: 20Gi
+      storageClass: standard
+      mountPath: /var/lib/postgresql/data

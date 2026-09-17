@@ -1,0 +1,21 @@
+image:
+  registry: ghcr.io/demo
+  tag: "1.0.0"
+
+gateway:
+  name: cluster-gateway
+  namespace: platform
+
+workloads:
+  api:
+    kind: backend
+    image: be
+    port: 8080
+  web:
+    kind: frontend
+    image: fe
+    port: 80
+
+routes:
+  - {path: /api/demo, workload: api, protocol: grpc, hostname: app.example.com}
+  - {path: /, workload: web, protocol: http, hostname: app.example.com}

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: deploy-template
+description: Helm library chart defining how divket workloads are deployed
+type: library
+version: 0.1.0
