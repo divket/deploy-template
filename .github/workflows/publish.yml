@@ -1,0 +1,74 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['chart-v*']
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.0
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      - run: helm lint .
+      - run: ./tests/run.sh
+
+  # Push main -> ghi đè version hiện tại + tag latest.
+  publish-latest:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.0
+      - uses: oras-project/setup-oras@v1
+      - name: Login GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Package and push
+        run: |
+          VER=$(sed -n 's/^version: *//p' Chart.yaml)
+          helm package . --version "$VER"
+          helm push "deploy-template-$VER.tgz" oci://ghcr.io/divket
+          oras tag "ghcr.io/divket/deploy-template:$VER" latest
+      - name: Note
+        run: echo "published oci://ghcr.io/divket/deploy-template:latest (and version from Chart.yaml)"
+
+  # Tag chart-vX.Y.Z -> publish đúng version đó, fail nếu lệch Chart.yaml.
+  publish-version:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/chart-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.0
+      - name: Login GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Check tag matches Chart.yaml
+        run: |
+          TAGVER="${GITHUB_REF#refs/tags/chart-v}"
+          CHARTVER=$(sed -n 's/^version: *//p' Chart.yaml)
+          if [ "$TAGVER" != "$CHARTVER" ]; then
+            echo "tag chart-v$TAGVER != Chart.yaml version $CHARTVER" >&2
+            exit 1
+          fi
+      - name: Package and push version
+        run: |
+          VER=$(sed -n 's/^version: *//p' Chart.yaml)
+          helm package . --version "$VER"
+          helm push "deploy-template-$VER.tgz" oci://ghcr.io/divket
