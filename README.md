@@ -1,7 +1,34 @@
 # deploy-template
 
 Helm library chart: cách một workload divket được render thành resource k8s.
-Spec: `docs/superpowers/specs/2026-09-14-divket-design.md`.
+Phiên bản hiện tại: `0.1.0` (xem `Chart.yaml`).
+
+## Dùng ở dự án khác
+
+Chart được publish lên GHCR (public):
+
+```
+oci://ghcr.io/divket/deploy-template
+```
+
+Khai dependency trong `Chart.yaml` của chart dự án:
+
+```yaml
+dependencies:
+  - name: deploy-template
+    version: 0.1.0
+    repository: oci://ghcr.io/divket
+```
+
+Rồi:
+
+```sh
+helm dependency update .
+helm template demo .   # máy nào cũng render được, không cần checkout repo này
+```
+
+`Chart.lock` của dự án commit vào git — đó là nơi duy nhất pin phiên bản deploy-template.
+Đổi version template là bump `version` ở dependency rồi `helm dependency update` lại.
 
 ## Helpers (`_common.tpl`, `_env.tpl`, `_health.tpl`)
 
@@ -46,6 +73,18 @@ Một policy mỗi workload, chỉ render khi `.Values.dependencies` non-empty.
 Egress mở theo cặp namespace+port (chart không biết label pod dependency);
 DNS về kube-system:53; ingress từ `gateway.namespace` (default `platform`).
 
+## Test
+
+```sh
+./tests/run.sh
+```
+
+Render từng fixture trong `tests/fixtures/` qua harness chart rồi so với
+golden trong `tests/golden/`. Đổi template mà output đổi thì test đỏ, buộc
+phải cập nhật golden có chủ ý bằng `UPDATE_GOLDEN=1 ./tests/run.sh`.
+
+Yêu cầu **helm v4** (v4 append `\n` vào output rỗng) và `yq` v4 (mikefarah).
+
 ## Harness test và quy ước đồng bộ
 
 `tests/harness/values.yaml` phải mirror mọi default top-level của
@@ -53,4 +92,16 @@ DNS về kube-system:53; ingress từ `gateway.namespace` (default `platform`).
 vào `.Values["deploy-template"]`, còn helper đọc top-level qua `.ctx`.
 `tests/run.sh` tự check điều này và FAIL nếu lệch — đổi default thì sửa cả hai.
 
-Golden test yêu cầu **helm v4** (v4 append `\n` vào output rỗng).
+## Publish version mới
+
+```sh
+# 1. Bump version trong Chart.yaml
+# 2. Merge vào main (chỉ chạy lint + test)
+# 3. Đánh tag chart-vX.Y.Z để CI publish:
+git tag chart-v0.2.0 && git push origin chart-v0.2.0
+```
+
+CI publish: `helm package .` + `helm push` lên `oci://ghcr.io/divket`.
+Không push đè cùng version (OCI immutable) — mỗi version publish một lần.
+Lần publish đầu tiên cần vào GitHub package chuyển visibility sang public
+để repo org khác pull được mà không cần token.

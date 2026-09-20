@@ -21,6 +21,7 @@ spec:
         app.kubernetes.io/name: mailer
         app.kubernetes.io/instance: test
     spec:
+      terminationGracePeriodSeconds: 90
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -44,3 +45,11 @@ spec:
           envFrom:
             - secretRef:
                 name: demo-secrets
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080

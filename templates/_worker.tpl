@@ -17,6 +17,7 @@ spec:
       labels:
         {{- include "deploy-template.selectorLabels" . | nindent 8 }}
     spec:
+      terminationGracePeriodSeconds: {{ $w.terminationGracePeriodSeconds | default 90 }}
       {{- with .ctx.Values.image.pullSecrets }}
       imagePullSecrets:
         {{- range . }}
@@ -52,6 +53,10 @@ spec:
           {{- if trim $envFrom }}
           envFrom:
             {{- $envFrom | trim | nindent 12 }}
+          {{- end }}
+          {{- $probes := include "deploy-template.probes" . -}}
+          {{- if trim $probes }}
+          {{- $probes | trim | nindent 10 }}
           {{- end }}
           {{- with $w.resources }}
           resources:
