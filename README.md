@@ -92,16 +92,23 @@ Yêu cầu **helm v4** (v4 append `\n` vào output rỗng) và `yq` v4 (mikefara
 vào `.Values["deploy-template"]`, còn helper đọc top-level qua `.ctx`.
 `tests/run.sh` tự check điều này và FAIL nếu lệch — đổi default thì sửa cả hai.
 
-## Publish version mới
+## Publish
+
+Mặc định: mỗi push lên `main` (sau khi test xanh) CI publish version trong
+`Chart.yaml` lên `oci://ghcr.io/divket` rồi trỏ tag `latest` vào đó.
+Chỉ tag `latest` và đúng version đó bị ghi đè — các version khác không ảnh
+hưởng gì.
+
+Release version mới:
 
 ```sh
-# 1. Bump version trong Chart.yaml
-# 2. Merge vào main (chỉ chạy lint + test)
-# 3. Đánh tag chart-vX.Y.Z để CI publish:
+# 1. Bump version trong Chart.yaml, merge vào main
+# 2. Đánh tag trùng version để CI publish version đó:
 git tag chart-v0.2.0 && git push origin chart-v0.2.0
 ```
 
-CI publish: `helm package .` + `helm push` lên `oci://ghcr.io/divket`.
-Không push đè cùng version (OCI immutable) — mỗi version publish một lần.
+Tag phải khớp `Chart.yaml` (lệch thì CI fail). Mỗi version publish một lần;
+muốn thử nghiệm thì cứ merge main, `latest` cập nhật theo.
+
 Lần publish đầu tiên cần vào GitHub package chuyển visibility sang public
 để repo org khác pull được mà không cần token.
